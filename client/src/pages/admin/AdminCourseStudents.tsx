@@ -28,9 +28,16 @@ export default function AdminCourseStudents() {
       dispatch(fetchCourse(courseId))
       fetchStudents()
     }
-  }, [courseId, dispatch])
+    
+    // Auto-refresh student progress every 30 seconds
+    const interval = setInterval(() => {
+      if (courseId) fetchStudents()
+    }, 30000)
+    
+    return () => clearInterval(interval)
+  }, [courseId, dispatch, fetchStudents])
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     if (!courseId) return
     try {
       const result = await dispatch(fetchCourseStudents(courseId))
@@ -40,7 +47,7 @@ export default function AdminCourseStudents() {
     } catch (error) {
       console.error('Failed to fetch students:', error)
     }
-  }
+  }, [courseId, dispatch])
 
   useEffect(() => {
     if (searchQuery.length > 0) {

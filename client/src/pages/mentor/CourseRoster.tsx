@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -22,7 +22,7 @@ export const CourseRoster = () => {
   const { loading } = useSelector((state: RootState) => state.courses);
   const [students, setStudents] = useState<CourseStudent[]>([]);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     if (!courseId) return;
     try {
       const result = await dispatch(fetchCourseStudents(courseId));
@@ -32,11 +32,15 @@ export const CourseRoster = () => {
     } catch (error) {
       console.error('Failed to fetch students:', error);
     }
-  };
+  }, [courseId, dispatch]);
 
   useEffect(() => {
     fetchStudents();
-  }, [courseId]);
+    
+    // Auto-refresh every 30 seconds to catch progress updates
+    const interval = setInterval(fetchStudents, 30000);
+    return () => clearInterval(interval);
+  }, [fetchStudents]);
 
   if (loading) return <div>Loading...</div>;
 

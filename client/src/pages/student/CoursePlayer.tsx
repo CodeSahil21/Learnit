@@ -79,18 +79,23 @@ export default function CoursePlayer() {
   const handleMarkComplete = async () => {
     if (!selectedChapter) return
     
-    const result = await dispatch(markChapterComplete(selectedChapter.id))
+    const result = await dispatch(markChapterComplete({ 
+      chapterId: selectedChapter.id, 
+      courseId: courseId! 
+    }))
     if (markChapterComplete.fulfilled.match(result)) {
       toast.success('Chapter marked as complete!')
-      // Refresh progress data
-      dispatch(fetchStudentProgress(courseId!))
       
       // Auto-select next chapter if available
       const nextChapter = course?.chapters?.find(c => 
         c.sequence_number === selectedChapter.sequence_number + 1
       )
-      if (nextChapter && getChapterStatus(nextChapter) === 'available') {
-        setSelectedChapter(nextChapter)
+      if (nextChapter) {
+        // Check if next chapter is now available after completion
+        const nextStatus = getChapterStatus(nextChapter)
+        if (nextStatus === 'available') {
+          setSelectedChapter(nextChapter)
+        }
       }
     } else {
       toast.error(result.payload as string || 'Failed to mark chapter as complete')
@@ -125,7 +130,7 @@ export default function CoursePlayer() {
         setSelectedChapter(firstAvailable)
       }
     }
-  }, [course?.chapters, selectedChapter, progress, getChapterStatus])
+  }, [course?.chapters, selectedChapter, progress])
 
   if (courseLoading || progressLoading) {
     return (

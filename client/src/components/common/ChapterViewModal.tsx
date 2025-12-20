@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Lock, Play, CheckCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { markChapterComplete } from '@/features/progress/progressSlice';
+import type { AppDispatch } from '@/app/store';
 
 interface Chapter {
   id: string;
@@ -36,6 +39,7 @@ export const ChapterViewModal = ({
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(false);
   const [markingComplete, setMarkingComplete] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     if (isOpen && chapterId) {
@@ -78,19 +82,17 @@ export const ChapterViewModal = ({
 
     setMarkingComplete(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/progress/${chapter.id}/complete`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (res.ok) {
+      const result = await dispatch(markChapterComplete({ 
+        chapterId: chapter.id, 
+        courseId 
+      }));
+      
+      if (markChapterComplete.fulfilled.match(result)) {
         toast.success('Chapter marked as complete!');
         onMarkComplete?.();
         onClose();
       } else {
-        const error = await res.json();
-        toast.error(error.message || 'Failed to mark complete');
+        toast.error(result.payload as string || 'Failed to mark complete');
       }
     } catch (error) {
       toast.error('Failed to mark complete');

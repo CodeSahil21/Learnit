@@ -37,14 +37,14 @@ export const fetchStudentProgress = createAsyncThunk<ProgressData, string>(
   }
 )
 
-export const markChapterComplete = createAsyncThunk<any, string>(
+export const markChapterComplete = createAsyncThunk<any, { chapterId: string; courseId: string }>(
   'progress/markChapterComplete',
-  async (chapterId, { rejectWithValue, getState }) => {
+  async ({ chapterId, courseId }, { rejectWithValue, getState }) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/progress/${chapterId}/complete`, {}, {
         headers: getAuthHeaders(getState)
       })
-      return response.data.data
+      return { ...response.data.data, courseId, chapterId }
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark chapter complete')
     }
@@ -95,8 +95,30 @@ const progressSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(markChapterComplete.fulfilled, (state) => {
+      .addCase(markChapterComplete.fulfilled, (state, action) => {
         state.loading = false
+        const { courseId, chapterId } = action.payload
+        
+        // Update progress data in state
+        if (state.progressData[courseId]) {
+          const progress = state.progressData[courseId]
+          
+          // Mark chapter as completed
+          const chapterProgress = progress.chapters.find(c => c.chapter_id === chapterId)
+          if (chapterProgress) {
+            chapterProgress.is_completed = true
+          } else {
+            progress.chapters.push({
+              chapter_id: chapterId,
+              is_completed: true,
+              completed_at: new Date().toISOString()
+            })
+          }
+          
+          // Update progress statistics
+          progress.completedChapters = progress.chapters.filter(c => c.is_completed).length
+          progress.progressPercentage = Math.round((progress.completedChapters / progress.totalChapters) * 100)
+        }
       })
       .addCase(markChapterComplete.rejected, (state, action) => {
         state.loading = false
