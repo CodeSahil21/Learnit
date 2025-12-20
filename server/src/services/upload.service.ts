@@ -8,7 +8,7 @@ export const uploadFile = async (file: Express.Multer.File): Promise<string> => 
   const fileName = `${Date.now()}-${file.originalname}`;
   
   const { data, error } = await supabase.storage
-    .from('lms-uploads')
+    .from('chapters')
     .upload(fileName, file.buffer, {
       contentType: file.mimetype,
       upsert: false
@@ -17,7 +17,7 @@ export const uploadFile = async (file: Express.Multer.File): Promise<string> => 
   if (error) throw new AppError('Upload failed', 400);
 
   const { data: { publicUrl } } = supabase.storage
-    .from('lms-uploads')
+    .from('chapters')
     .getPublicUrl(fileName);
 
   return publicUrl;

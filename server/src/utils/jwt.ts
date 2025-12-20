@@ -7,7 +7,7 @@ export interface JwtUser {
 }
 
 export const signToken = (user: JwtUser): string => {
-  return jwt.sign(user, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN as string });
+  return jwt.sign(user, env.JWT_SECRET, { expiresIn: String(env.JWT_EXPIRES_IN) } as jwt.SignOptions);
 };
 
 export const verifyToken = (token: string): JwtUser => {

@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import { defineConfig } from '@prisma/config';
+declare const process: {
+  env: Record<string, string | undefined>;
+};
 console.log("DEBUG: DIRECT_URL is:", process.env.DIRECT_URL);
 const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!url) {
@@ -12,5 +15,8 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
     url,
+  },
+  migrations: {
+    seed: 'ts-node prisma/seed.ts',
   },
 });

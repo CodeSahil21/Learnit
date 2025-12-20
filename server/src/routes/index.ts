@@ -12,7 +12,7 @@ const router = Router();
 router.use('/auth', auth);
 router.use('/courses', course);
 router.use('/progress', progress);
-router.use('/', admin);
+router.use('/admin', admin);
 router.use('/certificates', certificate);
 router.use('/', upload);
 

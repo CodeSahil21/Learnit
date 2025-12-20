@@ -1185,6 +1185,407 @@ const blob = await res.blob();
 | role                 | enum(STUDENT,MENTOR,ADMIN)          | Admin create user only                       |
 | title                | required (create), non-empty        | Course/Chapter title                         |
 | description          | required (create), non-empty        | Course/Chapter description                   |
+| sequence_number      | required, positive integer          | Chapter sequence (unique per course)         |
+| user_id              | required, non-empty string          | User ID for enrollment/assignment            |
+| user_ids             | required array of strings           | User IDs for bulk assignment                 |
+| query                | required, non-empty string          | Search query for student search              |
+
+---
+
+## Implementation Status
+
+✅ **All Required Endpoints Implemented:**
+- Student Search: `GET /api/users/search-students`
+- Bulk Assignment: `POST /api/courses/:id/assign/bulk`
+- Course Roster: `GET /api/courses/:id/students`
+- Sequential Chapter Access: `GET /api/courses/:courseId/chapters/:chapterId`
+- Admin Course Management: `GET /api/admin/courses`
+- Admin Enrollment Overview: `GET /api/admin/enrollments`
+
+✅ **Security Features:**
+- Role-based access control
+- JWT authentication
+- Input validation with Zod
+- Sequential learning enforcement
+- Mentor approval system
+
+✅ **Business Logic:**
+- Students must complete chapters sequentially
+- Bulk operations use skipDuplicates for reliability
+- Progress tracking with percentage calculation
+- Certificate generation on course completion
+
+---
+
+## Frontend Integration
+
+**Required Components Implemented:**
+- StudentSearch component for mentor use
+- BulkAssignModal for multi-student assignment
+- CourseRoster page with progress visualization
+- Enhanced CoursePlayer with sequential access
+- ChapterViewModal for detailed chapter viewing
+- AdminCourseManagement with statistics
+- AdminEnrollmentManagement overview
+- Enhanced AdminDashboard with quick actions
+
+**API Integration:**
+- All endpoints properly integrated
+- Error handling and user feedback
+- Loading states and optimistic updates
+- Type-safe API calls with TypeScript
+
+**Chapter View Modal Features:**
+- Role-based access control (Student/Mentor/Admin)
+- Sequential access enforcement for students
+- Integrated chapter completion for students
+- Full content viewing for mentors and admins
+- Responsive design with video/image support
+- Real-time access status indicators
+
+---
+
+## Missing Endpoints Documentation
+
+### GET /api/users/search-students?query=...
+1) Overview
+- Search for students by email (partial match). Available to approved mentors and admins.
+
+2) HTTP Specification
+- Method: GET
+- URL: /api/users/search-students?query=SEARCH_TERM
+- Auth: Bearer (MENTOR approved or ADMIN)
+
+3) Request Body
+- None
+
+4) Response
+- 200 OK
+```json
+{
+  "data": [
+    { "id": "string", "email": "string", "created_at": "ISO-8601" }
+  ]
+}
+```
+
+5) Errors
+- 400: { "message": "Query parameter is required" }
+- 403: { "message": "Mentor account not approved" }
+- 401: { "message": "Unauthorized" }
+
+6) Validation
+- query parameter required
+- Max 20 results returned
+
+7) cURL
+```bash
+curl "http://localhost:4000/api/users/search-students?query=john" \
+  -H "Authorization: Bearer $MENTOR_TOKEN"
+```
+
+8) Fetch
+```js
+const res = await fetch(`/api/users/search-students?query=${encodeURIComponent(query)}`, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+```
+
+9) Notes
+- Only returns students (role=STUDENT), never mentors or admins for security.
+
+---
+
+### POST /api/courses/:id/assign/bulk
+1) Overview
+- Assigns multiple students to a course at once. Uses skipDuplicates to prevent failures.
+
+2) HTTP Specification
+- Method: POST
+- URL: /api/courses/:id/assign/bulk
+- Auth: Bearer (MENTOR course owner or ADMIN)
+- Headers: Content-Type: application/json
+
+3) Request Body
+```json
+{
+  "user_ids": {
+    "type": "array",
+    "items": { "type": "string" },
+    "required": true,
+    "description": "Array of student user IDs"
+  }
+}
+```
+
+4) Response
+- 201 Created
+```json
+{
+  "data": {
+    "created": 3,
+    "total": 5
+  }
+}
+```
+
+5) Errors
+- 400: { "message": "user_ids array is required" }
+- 403: { "message": "Can only assign students to your own courses" }
+- 401: { "message": "Unauthorized" }
+
+6) Validation
+- user_ids: required array of non-empty strings
+
+7) cURL
+```bash
+curl -X POST http://localhost:4000/api/courses/COURSE_ID/assign/bulk \
+  -H "Authorization: Bearer $MENTOR_TOKEN" -H "Content-Type: application/json" \
+  -d '{"user_ids":["user1","user2","user3"]}'
+```
+
+8) Fetch
+```js
+const res = await fetch(`/api/courses/${courseId}/assign/bulk`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ user_ids: selectedUserIds })
+});
+```
+
+9) Notes
+- Uses skipDuplicates: true to prevent errors if some students already enrolled.
+
+---
+
+### GET /api/courses/:id/students
+1) Overview
+- Lists all students enrolled in a course with their progress. Course owner or admin only.
+
+2) HTTP Specification
+- Method: GET
+- URL: /api/courses/:id/students
+- Auth: Bearer (MENTOR course owner or ADMIN)
+
+3) Request Body
+- None
+
+4) Response
+- 200 OK
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "email": "string",
+      "enrolled_at": "ISO-8601",
+      "progress_percentage": 75
+    }
+  ]
+}
+```
+
+5) Errors
+- 403: { "message": "Can only view students of your own courses" }
+- 401: { "message": "Unauthorized" }
+
+6) Validation
+- N/A
+
+7) cURL
+```bash
+curl http://localhost:4000/api/courses/COURSE_ID/students \
+  -H "Authorization: Bearer $MENTOR_TOKEN"
+```
+
+8) Fetch
+```js
+const res = await fetch(`/api/courses/${courseId}/students`, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+```
+
+9) Notes
+- Progress percentage calculated from completed chapters.
+
+---
+
+### GET /api/courses/:courseId/chapters/:chapterId
+1) Overview
+- Get single chapter details with sequential access control for students.
+
+2) HTTP Specification
+- Method: GET
+- URL: /api/courses/:courseId/chapters/:chapterId
+- Auth: Bearer (STUDENT enrolled, MENTOR owner, or ADMIN)
+
+3) Request Body
+- None
+
+4) Response
+- 200 OK
+```json
+{
+  "data": {
+    "id": "string",
+    "title": "string",
+    "description": "string",
+    "video_url": "string|null",
+    "image_url": "string|null",
+    "sequence_number": 1,
+    "course_id": "string",
+    "is_accessible": true
+  }
+}
+```
+
+5) Errors
+- 403: { "message": "Complete previous chapters first" } or { "message": "Not enrolled in this course" }
+- 404: { "message": "Chapter not found" }
+- 401: { "message": "Unauthorized" }
+
+6) Validation
+- N/A
+
+7) cURL
+```bash
+curl http://localhost:4000/api/courses/COURSE_ID/chapters/CHAPTER_ID \
+  -H "Authorization: Bearer $STUDENT_TOKEN"
+```
+
+8) Fetch
+```js
+const res = await fetch(`/api/courses/${courseId}/chapters/${chapterId}`, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+```
+
+9) Notes
+- Students must complete previous chapters sequentially.
+- Locked chapters return limited data.
+
+---
+
+### GET /api/admin/courses
+1) Overview
+- Admin-only endpoint to list all courses with enrollment and chapter counts.
+
+2) HTTP Specification
+- Method: GET
+- URL: /api/admin/courses
+- Auth: Bearer (ADMIN)
+
+3) Request Body
+- None
+
+4) Response
+- 200 OK
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "title": "string",
+      "description": "string",
+      "mentor_id": "string",
+      "created_at": "ISO-8601",
+      "mentor": { "id": "string", "email": "string" },
+      "_count": {
+        "enrollments": 25,
+        "chapters": 8
+      }
+    }
+  ]
+}
+```
+
+5) Errors
+- 403: { "message": "Admin access required" }
+- 401: { "message": "Unauthorized" }
+
+6) Validation
+- N/A
+
+7) cURL
+```bash
+curl http://localhost:4000/api/admin/courses \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+8) Fetch
+```js
+const res = await fetch('/api/admin/courses', {
+  headers: { Authorization: `Bearer ${adminToken}` }
+});
+```
+
+9) Notes
+- Includes aggregated counts for better admin oversight.
+
+---
+
+### GET /api/admin/enrollments
+1) Overview
+- Admin-only endpoint to list all enrollments with student and course data.
+
+2) HTTP Specification
+- Method: GET
+- URL: /api/admin/enrollments
+- Auth: Bearer (ADMIN)
+
+3) Request Body
+- None
+
+4) Response
+- 200 OK
+```json
+{
+  "data": [
+    {
+      "user_id": "string",
+      "course_id": "string",
+      "enrolled_at": "ISO-8601",
+      "user": {
+        "id": "string",
+        "email": "string",
+        "role": "STUDENT"
+      },
+      "course": {
+        "id": "string",
+        "title": "string",
+        "mentor": { "id": "string", "email": "string" }
+      }
+    }
+  ]
+}
+```
+
+5) Errors
+- 403: { "message": "Admin access required" }
+- 401: { "message": "Unauthorized" }
+
+6) Validation
+- N/A
+
+7) cURL
+```bash
+curl http://localhost:4000/api/admin/enrollments \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+8) Fetch
+```js
+const res = await fetch('/api/admin/enrollments', {
+  headers: { Authorization: `Bearer ${adminToken}` }
+});
+```
+
+9) Notes
+- Provides complete enrollment overview for admin management.                    |
+| description          | required (create), non-empty        | Course/Chapter description                   |
 | sequence_number      | integer, min 1, unique per course   | Chapter ordering                             |
 | user_id (enroll)     | required                            | Target student for enroll/assign             |
 | courseId (query)     | required                            | Progress endpoint                             |

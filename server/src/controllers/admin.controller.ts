@@ -123,3 +123,35 @@ export const getStats = async (req: Request, res: Response, next: NextFunction) 
     next(err);
   }
 }
+
+export const searchStudents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const query = req.query.query as string;
+    if (!query) {
+      return res.status(400).json({ message: 'Query parameter is required' });
+    }
+    
+    const students = await adminService.searchStudents(query);
+    res.json({ data: students });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const getAdminCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courses = await adminService.getAdminCourses();
+    res.json({ data: courses });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const getAdminEnrollments = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const enrollments = await adminService.getAdminEnrollments();
+    res.json({ data: enrollments });
+  } catch (err) {
+    next(err);
+  }
+}

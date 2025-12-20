@@ -151,3 +151,59 @@ export interface AdminService {
 export interface CertificateService {
   generateCertificate(userId: string, courseId: string): Promise<Buffer>;
 }
+
+// New types for implemented features
+export interface BulkAssignInput {
+  user_ids: string[];
+}
+
+export interface BulkAssignResult {
+  created: number;
+  total: number;
+}
+
+export interface StudentSearchResult {
+  id: string;
+  email: string;
+  created_at: Date;
+}
+
+export interface CourseStudent {
+  id: string;
+  email: string;
+  enrolled_at: Date;
+  progress_percentage: number;
+}
+
+export interface AdminCourse {
+  id: string;
+  title: string;
+  description: string;
+  mentor_id: string;
+  created_at: Date;
+  mentor: { id: string; email: string };
+  _count: {
+    enrollments: number;
+    chapters: number;
+  };
+}
+
+export interface AdminEnrollment {
+  user_id: string;
+  course_id: string;
+  enrolled_at: Date;
+  user: {
+    id: string;
+    email: string;
+    role: string;
+  };
+  course: {
+    id: string;
+    title: string;
+    mentor: { id: string; email: string };
+  };
+}
+
+export interface ChapterWithAccess extends Chapter {
+  is_accessible?: boolean;
+}

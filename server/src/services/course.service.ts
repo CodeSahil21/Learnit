@@ -198,3 +198,97 @@ export const updateCourse = async (id: string, data: UpdateCourseInput): Promise
 export const deleteCourse = async (id: string): Promise<Course> => {
   return prisma.course.delete({ where: { id } }) as Promise<Course>;
 }
+
+export const bulkAssignStudents = async (courseId: string, userIds: string[]) => {
+  const enrollments = userIds.map(userId => ({
+    course_id: courseId,
+    user_id: userId
+  }));
+  
+  const result = await prisma.enrollment.createMany({
+    data: enrollments,
+    skipDuplicates: true
+  });
+  
+  return { created: result.count, total: userIds.length };
+}
+
+export const getCourseStudents = async (courseId: string) => {
+  const enrollments = await prisma.enrollment.findMany({
+    where: { course_id: courseId },
+    include: {
+      user: { select: { id: true, email: true } }
+    },
+    orderBy: { assigned_at: 'desc' }
+  });
+  
+  // Calculate progress for each student
+  const studentsWithProgress = await Promise.all(
+    enrollments.map(async (enrollment) => {
+      const totalChapters = await prisma.chapter.count({
+        where: { course_id: courseId }
+      });
+      
+      const completedChapters = await prisma.progress.count({
+        where: {
+          user_id: enrollment.user_id,
+          is_completed: true,
+          chapter: { course_id: courseId }
+        }
+      });
+      
+      const progressPercentage = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
+      
+      return {
+        id: enrollment.user.id,
+        email: enrollment.user.email,
+        enrolled_at: enrollment.assigned_at,
+        progress_percentage: progressPercentage
+      };
+    })
+  );
+  
+  return studentsWithProgress;
+}
+
+export const getChapterById = async (chapterId: string): Promise<Chapter | null> => {
+  return prisma.chapter.findUnique({ where: { id: chapterId } }) as Promise<Chapter | null>;
+}
+
+export const getStudentChapterAccess = async (userId: string, courseId: string, chapterId: string) => {
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: chapterId },
+    include: {
+      progresses: {
+        where: { user_id: userId },
+        select: { is_completed: true }
+      }
+    }
+  });
+  
+  if (!chapter || chapter.course_id !== courseId) return null;
+  
+  // Check if previous chapters are completed
+  const previousChapters = await prisma.chapter.findMany({
+    where: {
+      course_id: courseId,
+      sequence_number: { lt: chapter.sequence_number }
+    },
+    include: {
+      progresses: {
+        where: { user_id: userId, is_completed: true }
+      }
+    }
+  });
+  
+  const allPreviousCompleted = previousChapters.every(ch => ch.progresses.length > 0);
+  const isAccessible = chapter.sequence_number === 1 || allPreviousCompleted;
+  
+  return {
+    ...chapter,
+    is_accessible: isAccessible,
+    image_url: isAccessible ? chapter.image_url : null,
+    video_url: isAccessible ? chapter.video_url : null,
+    description: isAccessible ? chapter.description : 'Complete previous chapters to unlock'
+  };
+}

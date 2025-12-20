@@ -64,3 +64,45 @@ export const createUser = async (email: string, password: string, role: 'STUDENT
 
   return user;
 }
+
+export const searchStudents = async (query: string) => {
+  return prisma.user.findMany({
+    where: {
+      role: 'STUDENT',
+      email: { contains: query, mode: 'insensitive' }
+    },
+    select: { id: true, email: true, created_at: true },
+    take: 20
+  });
+}
+
+export const getAdminCourses = async () => {
+  return prisma.course.findMany({
+    include: {
+      mentor: { select: { id: true, email: true } },
+      _count: {
+        select: {
+          enrollments: true,
+          chapters: true
+        }
+      }
+    },
+    orderBy: { created_at: 'desc' }
+  });
+}
+
+export const getAdminEnrollments = async () => {
+  return prisma.enrollment.findMany({
+    include: {
+      user: { select: { id: true, email: true, role: true } },
+      course: { 
+        select: { 
+          id: true, 
+          title: true, 
+          mentor: { select: { id: true, email: true } }
+        } 
+      }
+    },
+    orderBy: { assigned_at: 'desc' }
+  });
+}

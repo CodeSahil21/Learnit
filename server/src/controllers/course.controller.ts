@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as courses from '../services/course.service';
-import { courseSchema, chapterSchema, enrollSchema, courseUpdateSchema } from '../utils/schema';
+import { courseSchema, chapterSchema, enrollSchema, courseUpdateSchema, bulkAssignSchema } from '../utils/schema';
 
 export const list = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -235,6 +235,86 @@ export const getMentorProgress = async (req: Request, res: Response, next: NextF
     
     const progress = await courses.getMentorStudentProgress(mentorId, courseId, studentId);
     res.json({ data: progress });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const bulkAssignCourse = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user!;
+    const courseId = req.params.id;
+    const { user_ids } = bulkAssignSchema.parse(req.body);
+    
+    // Check mentor ownership
+    if (user.role === 'MENTOR') {
+      const course = await courses.getCourse(courseId);
+      if (!course || course.mentor_id !== user.id) {
+        return res.status(403).json({ message: 'Can only assign students to your own courses' });
+      }
+    }
+    
+    const result = await courses.bulkAssignStudents(courseId, user_ids);
+    res.status(201).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const getCourseStudents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user!;
+    const courseId = req.params.id;
+    
+    // Check mentor ownership
+    if (user.role === 'MENTOR') {
+      const course = await courses.getCourse(courseId);
+      if (!course || course.mentor_id !== user.id) {
+        return res.status(403).json({ message: 'Can only view students of your own courses' });
+      }
+    }
+    
+    const students = await courses.getCourseStudents(courseId);
+    res.json({ data: students });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const getChapterDetail = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user!;
+    const { courseId, chapterId } = req.params;
+    
+    // Admin/Mentor: Return full chapter details immediately
+    if (user.role === 'ADMIN' || user.role === 'MENTOR') {
+      if (user.role === 'MENTOR') {
+        const course = await courses.getCourse(courseId);
+        if (!course || course.mentor_id !== user.id) {
+          return res.status(403).json({ message: 'Can only view chapters of your own courses' });
+        }
+      }
+      const chapter = await courses.getChapterById(chapterId);
+      if (!chapter) return res.status(404).json({ message: 'Chapter not found' });
+      res.json({ data: chapter });
+    } else {
+      // Student: Check enrollment and sequential access
+      const isEnrolled = await courses.checkEnrollment(user.id, courseId);
+      if (!isEnrolled) {
+        return res.status(403).json({ message: 'Not enrolled in this course' });
+      }
+      
+      const chapter = await courses.getStudentChapterAccess(user.id, courseId, chapterId);
+      if (!chapter) {
+        return res.status(404).json({ message: 'Chapter not found' });
+      }
+      
+      if (!chapter.is_accessible) {
+        return res.status(403).json({ message: 'Complete previous chapters first' });
+      }
+      
+      res.json({ data: chapter });
+    }
   } catch (err) {
     next(err);
   }
