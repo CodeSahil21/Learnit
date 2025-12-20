@@ -29,6 +29,18 @@ export default function CourseDetails() {
   const { currentCourse, loading } = useSelector((state: RootState) => state.courses)
   const { searchResults } = useSelector((state: RootState) => state.users)
 
+  const fetchStudents = useCallback(async () => {
+    if (!courseId) return
+    try {
+      const result = await dispatch(fetchCourseStudents(courseId))
+      if (fetchCourseStudents.fulfilled.match(result)) {
+        setCourseStudents(result.payload)
+      }
+    } catch (error) {
+      console.error('Failed to fetch students:', error)
+    }
+  }, [courseId, dispatch])
+
   useEffect(() => {
     if (courseId) {
       dispatch(fetchCourse(courseId))
@@ -42,18 +54,6 @@ export default function CourseDetails() {
     
     return () => clearInterval(interval)
   }, [courseId, dispatch, fetchStudents])
-
-  const fetchStudents = useCallback(async () => {
-    if (!courseId) return
-    try {
-      const result = await dispatch(fetchCourseStudents(courseId))
-      if (fetchCourseStudents.fulfilled.match(result)) {
-        setCourseStudents(result.payload)
-      }
-    } catch (error) {
-      console.error('Failed to fetch students:', error)
-    }
-  }, [courseId, dispatch])
 
 
 

@@ -107,9 +107,11 @@ const progressSlice = createSlice({
           const chapterProgress = progress.chapters.find(c => c.chapter_id === chapterId)
           if (chapterProgress) {
             chapterProgress.is_completed = true
+            chapterProgress.completed_at = new Date().toISOString()
           } else {
             progress.chapters.push({
               chapter_id: chapterId,
+              sequence_number: 0, // Will be updated from server data
               is_completed: true,
               completed_at: new Date().toISOString()
             })
