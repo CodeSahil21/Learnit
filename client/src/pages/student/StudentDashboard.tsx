@@ -103,14 +103,22 @@ export default function StudentDashboard() {
     memoizedDispatch()
   }, [memoizedDispatch])
 
+  const { progressData } = useSelector((state: RootState) => state.progress)
+
   const activeCourses = useMemo(() => 
-    courses.filter(() => true), // Placeholder for actual filtering logic
-    [courses]
+    courses.filter(course => {
+      const progress = progressData[course.id]?.progressPercentage || 0
+      return progress < 100
+    }),
+    [courses, progressData]
   )
 
   const completedCourses = useMemo(() => 
-    courses.filter(() => false), // Placeholder for actual filtering logic
-    [courses]
+    courses.filter(course => {
+      const progress = progressData[course.id]?.progressPercentage || 0
+      return progress === 100
+    }),
+    [courses, progressData]
   )
 
   if (error) {
@@ -162,11 +170,7 @@ export default function StudentDashboard() {
           
           <TabsContent value="completed">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {completedCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
-            {activeCourses.length > 0 && (
+            {completedCourses.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
                   <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
@@ -176,6 +180,10 @@ export default function StudentDashboard() {
                   </p>
                 </CardContent>
               </Card>
+            ) : (
+              completedCourses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))
             )}
           </TabsContent>
         </Tabs>

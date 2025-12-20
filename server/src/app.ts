@@ -8,16 +8,10 @@ import helmet from 'helmet';
 
 const app = express();
 
-const allowedOrigin = env.NODE_ENV === 'production' 
-  ? env.FRONTEND_URL || 'https://learnit-ebon.vercel.app'
-  : 'http://localhost:5173';
-
-console.log('NODE_ENV:', env.NODE_ENV);
-console.log('FRONTEND_URL:', env.FRONTEND_URL);
-console.log('Allowed Origin:', allowedOrigin);
-
 app.use(cors({
-  origin: allowedOrigin,
+  origin: env.NODE_ENV === 'production' 
+    ? env.FRONTEND_URL || 'https://learnit-ebon.vercel.app'
+    : 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
