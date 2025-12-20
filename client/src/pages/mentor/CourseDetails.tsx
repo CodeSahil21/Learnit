@@ -391,7 +391,13 @@ export default function CourseDetails() {
         {/* Add Chapter Modal */}
         <AddChapterModal
           isOpen={showAddChapterModal}
-          onClose={() => setShowAddChapterModal(false)}
+          onClose={() => {
+            setShowAddChapterModal(false)
+            // Refetch course data to show updated chapters
+            if (courseId) {
+              dispatch(fetchCourse(courseId))
+            }
+          }}
           courseId={courseId!}
         />
       </div>

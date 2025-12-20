@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { env } from '../config/env';
 import { AppError } from '../utils/AppError';
 
-const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 export const uploadFile = async (file: Express.Multer.File): Promise<string> => {
   const fileName = `${Date.now()}-${file.originalname}`;
