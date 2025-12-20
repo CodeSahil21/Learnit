@@ -22,7 +22,7 @@ const initialState: UsersState = {
   error: null,
 }
 
-const API_BASE_URL = 'http://localhost:4000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
 
 // Helper function to get auth headers
 const getAuthHeaders = (getState: any) => {

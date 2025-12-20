@@ -57,7 +57,7 @@ export default function CoursePlayer() {
     // Fetch individual chapter with sequential check
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`http://localhost:4000/api/courses/${courseId}/chapters/${chapter.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/courses/${courseId}/chapters/${chapter.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       

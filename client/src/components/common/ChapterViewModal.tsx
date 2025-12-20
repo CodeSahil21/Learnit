@@ -47,7 +47,7 @@ export const ChapterViewModal = ({
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:4000/api/courses/${courseId}/chapters/${chapterId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/courses/${courseId}/chapters/${chapterId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -79,7 +79,7 @@ export const ChapterViewModal = ({
     setMarkingComplete(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:4000/api/progress/${chapter.id}/complete`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/progress/${chapter.id}/complete`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
