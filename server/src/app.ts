@@ -10,8 +10,8 @@ const app = express();
 
 app.use(cors({
   origin: env.NODE_ENV === 'production' 
-    ? [env.FRONTEND_URL]
-    : ['http://localhost:5173'],
+    ? env.FRONTEND_URL || 'https://learnit-ebon.vercel.app'
+    : 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
