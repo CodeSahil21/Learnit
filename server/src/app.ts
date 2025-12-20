@@ -10,7 +10,7 @@ const app = express();
 
 app.use(cors({
   origin: env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app']
+    ? [env.FRONTEND_URL]
     : ['http://localhost:5173'],
   credentials: true
 }));
