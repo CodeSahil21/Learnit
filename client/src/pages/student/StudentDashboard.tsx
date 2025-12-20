@@ -170,21 +170,22 @@ export default function StudentDashboard() {
           
           <TabsContent value="completed">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {completedCourses.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No completed courses yet</h3>
-                  <p className="text-gray-600">
-                    Complete your active courses to see them here
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              completedCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))
-            )}
+              {completedCourses.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Award className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No completed courses yet</h3>
+                    <p className="text-gray-600">
+                      Complete your active courses to see them here
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                completedCourses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       )}
