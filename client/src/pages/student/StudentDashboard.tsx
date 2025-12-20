@@ -82,7 +82,7 @@ const CourseCard = memo(function CourseCard({ course }: { course: any }) {
         </div>
 
         <Button asChild className="w-full h-11 bg-blue-600 hover:bg-blue-700 font-medium text-white">
-          <Link to={`/course/${course.id}`}>
+          <Link to={`/course/${course.id}`} style={{ color: 'white !important' }}>
             {progress === 0 ? 'Start Learning' : 'Continue Learning'}
           </Link>
         </Button>
