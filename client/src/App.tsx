@@ -81,32 +81,32 @@ function App() {
           
           {/* Mentor Routes */}
           <Route path="mentor/courses" element={
-            <ProtectedRoute allowedRoles={['MENTOR']}>
+            <ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']}>
               <MentorCourses />
             </ProtectedRoute>
           } />
           <Route path="mentor/create-course" element={
-            <ProtectedRoute allowedRoles={['MENTOR']}>
+            <ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']}>
               <CreateCourse />
             </ProtectedRoute>
           } />
           <Route path="mentor/courses/:id" element={
-            <ProtectedRoute allowedRoles={['MENTOR']}>
+            <ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']}>
               <CourseDetails />
             </ProtectedRoute>
           } />
           <Route path="mentor/courses/:id/edit" element={
-            <ProtectedRoute allowedRoles={['MENTOR']}>
+            <ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']}>
               <EditCourse />
             </ProtectedRoute>
           } />
           <Route path="mentor/courses/:id/add-chapter" element={
-            <ProtectedRoute allowedRoles={['MENTOR']}>
+            <ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']}>
               <AddChapter />
             </ProtectedRoute>
           } />
           <Route path="mentor/courses/:id/progress" element={
-            <ProtectedRoute allowedRoles={['MENTOR']}>
+            <ProtectedRoute allowedRoles={['MENTOR', 'ADMIN']}>
               <StudentProgress />
             </ProtectedRoute>
           } />
