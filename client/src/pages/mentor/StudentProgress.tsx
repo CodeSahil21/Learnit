@@ -30,6 +30,13 @@ export default function StudentProgress() {
   useEffect(() => {
     if (courseId && selectedStudent) {
       dispatch(fetchStudentProgress({ courseId, userId: selectedStudent }))
+      
+      // Auto-refresh progress every 15 seconds when viewing specific student
+      const interval = setInterval(() => {
+        dispatch(fetchStudentProgress({ courseId, userId: selectedStudent }))
+      }, 15000)
+      
+      return () => clearInterval(interval)
     }
   }, [courseId, selectedStudent, dispatch])
 
