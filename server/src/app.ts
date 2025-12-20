@@ -18,6 +18,10 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(helmet());
 
+app.get('/', (_req, res) => {
+  res.json({ message: 'LMS API Server', status: 'running' });
+});
+
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', env: env.NODE_ENV });
 });
