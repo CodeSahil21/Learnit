@@ -73,7 +73,7 @@ const CourseCard = memo(function CourseCard({ course }: { course: any }) {
         <div className="flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />
-            <span>{courseProgress?.totalChapters || 0} chapters</span>
+            <span>{course.chapters?.length || 0} chapters</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />

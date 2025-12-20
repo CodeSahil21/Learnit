@@ -15,7 +15,10 @@ import type {
 export const listCourses =  async(): Promise<CourseWithMentor[]> => {
   return prisma.course.findMany({ 
     orderBy: { created_at: 'desc' },
-    include: { mentor: { select: { id: true, email: true } } }
+    include: { 
+      mentor: { select: { id: true, email: true } },
+      chapters: true
+    }
   }) as Promise<CourseWithMentor[]>;
 }
 
@@ -31,7 +34,10 @@ export const getStudentCourses = async (studentId: string): Promise<CourseWithMe
   return prisma.course.findMany({
     where: { enrollments: { some: { user_id: studentId } } },
     orderBy: { created_at: 'desc' },
-    include: { mentor: { select: { id: true, email: true } } }
+    include: { 
+      mentor: { select: { id: true, email: true } },
+      chapters: true
+    }
   }) as Promise<CourseWithMentor[]>;
 }
 
