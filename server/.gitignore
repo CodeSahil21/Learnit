@@ -10,6 +10,7 @@ node_modules/
 # prisma
 prisma/*.db
 prisma/*.db-journal
+prisma/seed.ts
 
 # logs
 npm-debug.log*

@@ -9,7 +9,9 @@ import helmet from 'helmet';
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app']
+    : ['http://localhost:5173'],
   credentials: true
 }));
 app.use(express.json());
@@ -37,7 +39,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 const port = env.PORT;
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   // eslint-disable-next-line no-console
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
