@@ -8,10 +8,15 @@ import helmet from 'helmet';
 
 const app = express();
 
+const allowedOrigins = env.NODE_ENV === 'production'
+  ? (env.FRONTEND_URL ? env.FRONTEND_URL.split(',').map(o => o.trim()) : ['https://learnit-ebon.vercel.app'])
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: env.NODE_ENV === 'production' 
-    ? env.FRONTEND_URL || 'https://learnit-ebon.vercel.app'
-    : 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -42,8 +47,13 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(status).json({ message });
 });
 
-const port = env.PORT;
-app.listen(port, '0.0.0.0', () => {
-  // eslint-disable-next-line no-console
-  console.log(`Server running on port ${port}`);
-});
+export default app;
+
+// Only listen when running directly (not on Vercel)
+if (process.env.VERCEL !== '1') {
+  const port = env.PORT;
+  app.listen(port, '0.0.0.0', () => {
+    // eslint-disable-next-line no-console
+    console.log(`Server running on port ${port}`);
+  });
+}
