@@ -6,6 +6,7 @@ import { Badge } from '../ui/badge';
 import { Lock, Play, CheckCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { markChapterComplete } from '@/features/progress/progressSlice';
+import API_BASE_URL from '@/lib/api';
 import type { AppDispatch } from '@/app/store';
 
 interface Chapter {
@@ -51,7 +52,7 @@ export const ChapterViewModal = ({
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/courses/${courseId}/chapters/${chapterId}`, {
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/chapters/${chapterId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

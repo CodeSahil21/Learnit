@@ -11,6 +11,7 @@ import { ChapterViewModal } from '@/components/common/ChapterViewModal'
 import { fetchCourse } from '@/features/courses/courseSlice'
 import { fetchStudentProgress, markChapterComplete, downloadCertificate } from '@/features/progress/progressSlice'
 import { getYouTubeEmbedUrl, isYouTubeUrl } from '@/lib/videoUtils'
+import API_BASE_URL from '@/lib/api'
 import type { AppDispatch, RootState } from '@/app/store'
 
 export default function CoursePlayer() {
@@ -57,7 +58,7 @@ export default function CoursePlayer() {
     // Fetch individual chapter with sequential check
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/courses/${courseId}/chapters/${chapter.id}`, {
+      const res = await fetch(`${API_BASE_URL}/courses/${courseId}/chapters/${chapter.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       
