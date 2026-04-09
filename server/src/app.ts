@@ -31,7 +31,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', env: env.NODE_ENV });
 });
 
-app.use('/api', router);
+app.use('/', router);
 
 app.use((req, _res, next) => {
   next(new AppError(`Route ${req.method} ${req.originalUrl} not found`, 404));
