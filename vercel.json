@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && npm run build",
+  "installCommand": "cd client && npm install --include=dev && cd ../server && npm install && npx prisma generate",
+  "buildCommand": "cd client && node_modules/.bin/vite build",
   "outputDirectory": "client/dist",
-  "installCommand": "cd server && npm install && npx prisma generate",
   "framework": null,
   "rewrites": [
     {
